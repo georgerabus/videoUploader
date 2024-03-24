@@ -13,22 +13,37 @@ function App() {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      setToastShown(false); // Reset toastShown when a new file is uploaded
+      setToastShown(false);
     }
   };
 
   useEffect(() => {
     if (file && !toastShown) {
-      // Simulate an upload process with a promise
-      const uploadPromise = new Promise((resolve, reject) => {
-        // Replace the condition below with your actual upload logic
-        setTimeout(() => {
-          // Simulate upload success after 5 seconds
-          resolve('Uploaded: ' + file?.name);
-        }, 5000);
-      });
+      const formData = new FormData();
+      formData.append('file', file);
 
-      // Displaying toast while the promise is pending
+      const uploadPromise = fetch('http://localhost:5000', {
+        method: 'POST',
+        body: formData,
+      })
+        .then(response => {
+          if (response.ok) {
+            return response.json(); // Assuming the server returns a JSON response
+          } else {
+            throw new Error('Failed to upload the video');
+          }
+        })
+        .then(data => {
+          return new Promise(resolve => {
+            setTimeout(() => {
+              resolve(data);
+            }, 0);
+          });
+        })
+        .catch(error => {
+          throw new Error('Failed to upload the video');
+        });
+
       toast.promise(uploadPromise, {
         success: { title: 'Upload Successful', description: 'Video uploaded successfully' },
         error: { title: 'Upload Failed', description: 'Failed to upload the video' },
@@ -48,12 +63,16 @@ function App() {
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
-      <Button
-        my={5}
-        onClick={() => document.getElementById('fileInput')?.click()}
-      >
-        Upload
-      </Button>
+<Button
+  my={5}
+  onClick={() => document.getElementById('fileInput')?.click()}
+  colorScheme="red" // Set the button color to red
+  size="lg" // Set the button size to large
+  borderRadius="full" // Make the button fully rounded
+  boxShadow="lg" // Add a shadow effect to the button
+>
+  Upload
+</Button>
     </>
   );
 }

@@ -1,27 +1,37 @@
-from flask import Flask, request, send_file
-
-
-# Set up Flask app
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # This enables CORS for all routes
+CORS(app)
 
 @app.route("/", methods=['GET', 'POST'])
-def home():
-    if request.method == 'POST':
-        prompt = request.json.get('url', '')
-        if prompt:
-            print(prompt)
-            return "Waau"
-        else:
-            return "No prompt provided", 400
-    else:
-        return "Please send a POST request with a url", 200
+def upload():
+    if request.method == 'GET':
+        return "GET request received", 200
 
-# Set up ngrok
-port_no = 5000
+    if 'file' not in request.files:
+        return "No file part", 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return "No selected file", 400
 
-# Run the app
-app.run(port=port_no)
+    # Read the file as binary data
+    file_data = file.read()
+
+    # Print some debugging information
+    print("Received file:", file.filename)
+
+    # Handle file upload logic here, for example, save the file to disk
+    save_path = '/home/george/Downloads/backend/' + file.filename
+    try:
+        with open(save_path, 'wb') as f:
+            f.write(file_data)
+        print("File saved successfully to:", save_path)
+        return "Upload successful", 200
+    except Exception as e:
+        print("Error saving file:", str(e))
+        return "Failed to save file", 500
+
+if __name__ == "__main__":
+    app.run(port=5000)
