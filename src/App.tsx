@@ -1,58 +1,34 @@
 import { useState, useEffect } from 'react';
 import './App.css';
-import { useToast } from '@chakra-ui/react';
-import { Button } from '@chakra-ui/react';
+import { useToast, Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, Button, Radio, RadioGroup, VStack } from '@chakra-ui/react';
 import { Heading } from '@chakra-ui/react';
 
 function App() {
   const toast = useToast();
   const [file, setFile] = useState<File | null>(null);
-  const [toastShown, setToastShown] = useState(false);
+  const [showDrawer, setShowDrawer] = useState(false);
+  const [selectedOption, setSelectedOption] = useState('');
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      setToastShown(false);
+      setShowDrawer(true);
     }
   };
 
-  useEffect(() => {
-    if (file && !toastShown) {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const uploadPromise = fetch('http://localhost:5000', {
-        method: 'POST',
-        body: formData,
-      })
-        .then(response => {
-          if (response.ok) {
-            return response.json(); // Assuming the server returns a JSON response
-          } else {
-            throw new Error('Failed to upload the video');
-          }
-        })
-        .then(data => {
-          return new Promise(resolve => {
-            setTimeout(() => {
-              resolve(data);
-            }, 0);
-          });
-        })
-        .catch(error => {
-          throw new Error('Failed to upload the video');
-        });
-
-      toast.promise(uploadPromise, {
-        success: { title: 'Upload Successful', description: 'Video uploaded successfully' },
-        error: { title: 'Upload Failed', description: 'Failed to upload the video' },
-        loading: { title: 'Uploading', description: 'Please wait while the video is being uploaded' },
-      });
-
-      setToastShown(true);
-    }
-  }, [file, toast, toastShown]);
+  const processVideo = () => {
+    // Logic to send the video to the backend for processing
+    // This is where you would make your API call
+    setShowDrawer(false); // Close the drawer after processing
+    toast({
+      title: 'Video Processing',
+      description: 'Your video is being processed. Please wait...',
+      status: 'info',
+      duration: 5000, // Adjust as needed
+      isClosable: true,
+    });
+  };
 
   return (
     <>
@@ -63,16 +39,53 @@ function App() {
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
-<Button
-  my={5}
-  onClick={() => document.getElementById('fileInput')?.click()}
-  colorScheme="red" // Set the button color to red
-  size="lg" // Set the button size to large
-  borderRadius="full" // Make the button fully rounded
-  boxShadow="lg" // Add a shadow effect to the button
->
-  Upload
-</Button>
+      <Button
+        my={5}
+        onClick={() => document.getElementById('fileInput')?.click()}
+        colorScheme="red" // Set the button color to red
+        size="lg" // Set the button size to large
+        borderRadius="full" // Make the button fully rounded
+        boxShadow="lg" // Add a shadow effect to the button
+      >
+        Upload
+      </Button>
+      
+      <Drawer
+        isOpen={showDrawer}
+        placement="right"
+        onClose={() => setShowDrawer(false)}
+      >
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader>Select an Option</DrawerHeader>
+
+          <DrawerBody>
+           <VStack spacing={4}>
+            <Radio
+              isChecked={selectedOption === 'video'}
+              onChange={() => setSelectedOption('video')}
+              value="video"
+            >
+              Video
+            </Radio>
+            <Radio
+              isChecked={selectedOption === 'audio'}
+              onChange={() => setSelectedOption('audio')}
+              value="audio"
+            >
+              Audio
+            </Radio>
+           </VStack>
+          </DrawerBody>
+
+          <DrawerFooter>
+            <Button colorScheme="red" mr={3} onClick={processVideo}>
+              Process
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }
