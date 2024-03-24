@@ -1,37 +1,40 @@
-from flask import Flask, request
-from flask_cors import CORS
+from flask import Flask, request, jsonify
+from werkzeug.utils import secure_filename
+import os
 
 app = Flask(__name__)
-CORS(app)
 
-@app.route("/", methods=['GET', 'POST'])
-def upload():
-    if request.method == 'GET':
-        return "GET request received", 200
+UPLOAD_FOLDER = '/home/george/Downloads/backend' # Update the upload folder path
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+ALLOWED_EXTENSIONS = {'mp4', 'mp3'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/', methods=['POST'])
+def upload_file():
     if 'file' not in request.files:
-        return "No file part", 400
-    
+        return jsonify({'error': 'No file part'}), 400
+
     file = request.files['file']
     if file.filename == '':
-        return "No selected file", 400
+        return jsonify({'error': 'No selected file'}), 400
 
-    # Read the file as binary data
-    file_data = file.read()
+    if not allowed_file(file.filename):
+        return jsonify({'error': 'Invalid file extension'}), 400
 
-    # Print some debugging information
-    print("Received file:", file.filename)
+    filename = secure_filename(file.filename) # Secure the filename
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-    # Handle file upload logic here, for example, save the file to disk
-    save_path = '/home/george/Downloads/backend/' + file.filename
-    try:
-        with open(save_path, 'wb') as f:
-            f.write(file_data)
-        print("File saved successfully to:", save_path)
-        return "Upload successful", 200
-    except Exception as e:
-        print("Error saving file:", str(e))
-        return "Failed to save file", 500
+    selected_option = request.form.get('selectedOption') # Get the selected option
+    slider_value = request.form.get('sliderValue') # Get the slider value
 
-if __name__ == "__main__":
-    app.run(port=5000)
+    print("Received file:", filename)
+    print("Selected option:", selected_option)
+    print("Slider value:", slider_value)
+
+    return jsonify({'message': 'File uploaded successfully'}), 200
+
+if __name__ == '__main__':
+    app.run(debug=True)
