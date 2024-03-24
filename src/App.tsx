@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './App.css';
-import { useToast, Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, Button, Radio, RadioGroup, VStack } from '@chakra-ui/react';
+import { useToast, Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, Button, Radio, VStack, Slider, SliderTrack, SliderFilledTrack, SliderThumb } from '@chakra-ui/react';
 import { Heading } from '@chakra-ui/react';
 
 function App() {
@@ -8,6 +8,7 @@ function App() {
   const [file, setFile] = useState<File | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedOption, setSelectedOption] = useState('');
+  const [sliderValue, setSliderValue] = useState(50); // Initial value for the slider
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -61,22 +62,34 @@ function App() {
           <DrawerHeader>Select an Option</DrawerHeader>
 
           <DrawerBody>
-           <VStack spacing={4}>
-            <Radio
-              isChecked={selectedOption === 'video'}
-              onChange={() => setSelectedOption('video')}
-              value="video"
-            >
-              Video
-            </Radio>
-            <Radio
-              isChecked={selectedOption === 'audio'}
-              onChange={() => setSelectedOption('audio')}
-              value="audio"
-            >
-              Audio
-            </Radio>
-           </VStack>
+            <VStack spacing={4}>
+              <Radio
+                isChecked={selectedOption === 'video'}
+                onChange={() => setSelectedOption('video')}
+                value="video"
+              >
+                Video
+              </Radio>
+              <Radio
+                isChecked={selectedOption === 'audio'}
+                onChange={() => setSelectedOption('audio')}
+                value="audio"
+              >
+                Audio
+              </Radio>
+              {selectedOption && (
+                <Slider
+                  aria-label={`${selectedOption === 'video' ? 'Video' : 'Audio'} Slider`}
+                  value={sliderValue}
+                  onChange={(value) => setSliderValue(value)}
+                >
+                  <SliderTrack>
+                    <SliderFilledTrack />
+                  </SliderTrack>
+                  <SliderThumb />
+                </Slider>
+              )}
+            </VStack>
           </DrawerBody>
 
           <DrawerFooter>
