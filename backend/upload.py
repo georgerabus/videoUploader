@@ -34,7 +34,24 @@ def upload_file():
     print("Selected option:", selected_option)
     print("Slider value:", slider_value)
 
-    return jsonify({'message': 'File uploaded successfully'}), 200
+    # Process the file and other data as needed
+    # For demonstration purposes, we'll just return the processed data
+    processed_data = {
+        'filename': filename,
+        'selectedOption': selected_option,
+        'sliderValue': slider_value
+    }
+    return jsonify({'message': 'File uploaded successfully', 'data': processed_data}), 200
+
+@app.route('/data', methods=['GET'])
+def get_data():
+    selected_option = request.args.get('selectedOption')  # Get the selected option from the query parameters
+    slider_value = request.args.get('sliderValue')  # Get the slider value from the query parameters
+
+    # Construct the data object with received values
+    data = {'selectedOption': selected_option, 'sliderValue': slider_value}
+    return jsonify(data), 200
+
 
 if __name__ == '__main__':
     app.run(debug=True)

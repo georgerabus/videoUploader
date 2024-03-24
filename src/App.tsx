@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
-import { useToast, Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, Button, Radio, VStack, Slider, SliderTrack, SliderFilledTrack, SliderThumb } from '@chakra-ui/react';
+import { useToast, Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, Button, Radio, VStack, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text } from '@chakra-ui/react';
 import { Heading } from '@chakra-ui/react';
 import axios from 'axios'; // Import Axios for making HTTP requests
 
@@ -10,6 +10,11 @@ function App() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedOption, setSelectedOption] = useState('');
   const [sliderValue, setSliderValue] = useState(50); // Initial value for the slider
+  const [backendData, setBackendData] = useState<{ selectedOption: string; sliderValue: number } | null>(null); // State variable to store backend data
+  const [videoProcessed, setVideoProcessed] = useState(false);
+  useEffect(() => {
+    fetchDataFromBackend();
+  }, []); // Fetch data when the component mounts
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -26,29 +31,51 @@ function App() {
     formData.append('sliderValue', String(sliderValue)); // Append the slider value
   
     axios.post('http://localhost:5000', formData)
+    .then(response => {
+      const processedData = response.data.data;
+      setBackendData(processedData);
+      setShowDrawer(false);
+      setVideoProcessed(true);
+      toast({
+        title: 'Video Processing',
+        description: `Your video "${processedData.filename}" has been processed successfully.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      
+      // Fetch data from backend after processing the video
+      fetchDataFromBackend();
+    })
+    .catch(error => {
+      console.error('Error uploading file:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to process video. Please try again later.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    });
+  };
+
+  const fetchDataFromBackend = () => {
+    axios.get('http://localhost:5000/data', {
+        params: {
+          selectedOption: selectedOption,
+          sliderValue: sliderValue
+        }
+      })
       .then(response => {
-        console.log(response.data); // Log the response from the backend
-        setShowDrawer(false);
-        toast({
-          title: 'Video Processing',
-          description: 'Your video is being processed. Please wait...',
-          status: response.status === 200 ? 'success' : 'error',
-          duration: 5000,
-          isClosable: true,
-        });
+        const data = response.data;
+        setBackendData(data);
       })
       .catch(error => {
-        console.error('Error uploading file:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to process video. Please try again later.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
+        console.error('Error fetching data from backend:', error);
       });
   };
   
+
   return (
     <>
       <Heading my={10}>Upload a Video</Heading>
@@ -117,6 +144,16 @@ function App() {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
+
+      {/* Conditional rendering of backend data section */}
+      {videoProcessed && backendData && (
+  <>
+    <Heading my={5} size="md">Backend Data</Heading>
+    <Text>Selected Option: {backendData.selectedOption}</Text>
+    <Text>Slider Value: {backendData.sliderValue}</Text>
+  </>
+)}
+
     </>
   );
 }
